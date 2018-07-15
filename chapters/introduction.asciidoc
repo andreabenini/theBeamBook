@@ -84,7 +84,7 @@ implementation of Erlang (see xref:Other_Erlang_Implementations[])).
 Your application code will run in an Erlang node, and all the layers
 of the node will affect the performance of your application. We will
 look at the stack of layers that makes up a node. This will help you
-understand you options for running your system in different
+understand your options for running your system in different
 environments.
 
 In OO terminology one could say that an Erlang node is an object of
@@ -271,7 +271,7 @@ hardware failure. Therefore you need to distribute your system over at
 least two physical machines. You do this by starting a node on
 each machine and then you can connect the nodes to each other so
 that processes can communicate with each other across the nodes
-just as if they where running in the same node.
+just as if they were running in the same node.
 
 [[a_distributed_application]]
 .Distributed Applications
@@ -442,7 +442,7 @@ them briefly.
 
 ==== Erlang on Xen
 
-Erlang on Xen (link:http://erlangonxen.org) is an Erlang implementation
+Erlang on Xen (link:http://erlangonxen.org[]) is an Erlang implementation
 running directly on server hardware with no OS layer in between, only
 a thin Xen client.
 
@@ -481,7 +481,7 @@ options:
 
 ==== Erjang
 
-Erjang (link:http://erjang.org) is an Erlang implementation which runs
+Erjang (link:http://www.erjang.org[]) is an Erlang implementation which runs
 on the JVM. It loads +.beam+ files and recompile the code to Java +.class+
 files. Erjang is almost 100% binary compatible with (generic) BEAM.
 
