@@ -77,13 +77,13 @@ several machines.
 
 Erlang uses processes to achieve concurrency. Conceptually Erlang
 processes are similar to most OS processes, they execute in parallel
-and can communicate through signals. In practices there is a huge
+and can communicate through signals. In practice there is a huge
 difference in that Erlang processes are much more lightweight than
 most OS processes. Many other concurrent programming languages call
 their equivalent to Erlang processes _agents_.
 
 Erlang achieves concurrency by interleaving the execution of processes
-on the Erlang virtual machine, the BEAM. On multi-core processor the
+on the Erlang virtual machine, the BEAM. On a multi-core processor the
 BEAM can also achieve parallelism by running one scheduler per core and
 executing one Erlang process per scheduler. The designer of an Erlang
 system can achieve further parallelism by distributing the system on
@@ -96,7 +96,7 @@ files in the directory. Each module contains a number of _functions_ and
 each function is made up of _expressions_.
 
 Since Erlang is a functional language it has no statements,
-only expressions. Erlang expressions can be combined to an Erlang
+only expressions. Erlang expressions can be combined into an Erlang
 function. A function takes a number of arguments and returns a
 value. In xref:erlang_code_examples[] we can see some examples of
 Erlang expressions and functions.
