@@ -107,9 +107,13 @@ free to contribute by fixing tags in the current version.
 Chapter tags should start with 'CH-'. Words in a tag are separated by
 underscores '_'.
 
+Part tags should start with 'P-'.
+
 Section tags should start with 'SEC-'.
 
 Figure tags should start with 'FIG-'.
+
+Appendix tags should start with 'AP-'.
 
 Code listing tags (in the appendix) should start with 'LISTING-'.
 
@@ -137,44 +141,34 @@ that you have all the needed tools installed.
 
 ### Docker
 
-A Docker image containing everything
-which is needed to build the book from source is provided. To use it:
-
-```shell
-docker pull robertoaloi/docker-thebeambook:latest
-docker run -v $PWD:/book -t robertoaloi/docker-thebeambook make
-```
+Docker images with asciidoctor is available here: [dcoker-asciidoctor](https://github.com/asciidoctor/docker-asciidoctor)
 
 ### Linux
-
+WIP, to be updated
 ```shell
 make
 ```
 
 ### Mac OSX
 
-1. Install [MacTex](http://www.tug.org/mactex/). Note that you would
-   need to _full_ MacTex rather than just BasicTex.
-1. Add `/Library/TeX/texbin` to your `PATH`.
-1. `easy_install dblatex`
-1. Install [asciidoc](http://asciidoc.org/INSTALL.html)
+1. Install [asciidoc](https://github.com/asciidoctor/asciidoctor)
+1. Install [asciidoctor-pdf](https://github.com/asciidoctor/asciidoctor-pdf)
 1. Install [asciidoctor-diagram](http://asciidoctor.org/docs/asciidoctor-diagram/)
-1. Install [shaape](https://github.com/christiangoltz/shaape)
-1. Install [source-highlight](https://www.gnu.org/software/src-highlite/)
+1. Install [ditaa](https://github.com/stathissideris/ditaa)
+1. Install [graphviz](https://www.graphviz.org/)
+1. Install [rouge](https://asciidoctor.org/docs/user-manual/#rouge)
 1. Install [wget](https://www.gnu.org/software/wget/)
 1. `make`
 
-### Mac OSX (using brew)
+### Mac OSX (using brew etc)
 
-1. `brew install Caskroom/cask/mactex`
-1. Add `/Library/TeX/texbin` to your `PATH`.
-1. `sudo easy_install dblatex`
-1. `brew install asciidoc`
-1. `brew install pygtk py2cairo pango`
-1. `pip install shaape`
-1. `brew install source-highlight`
-1. `brew install wget`
+1. `brew install asciidoctor`
+1. `gem install asciidoctor-pdf`
 1. `gem install asciidoctor-diagram`
+1. `brew install ditaa`
+1. `brew install graphviz`
+1. `gem install rouge`
+1. `brew install wget`
 1. `make`
 
 ## License

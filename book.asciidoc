@@ -1,4 +1,21 @@
 = The Erlang Runtime System
+:author: Erik Stenman
+:encoding: utf-8
+:lang: en
+:toc: left
+:toclevels: 3
+:experimental:
+:icons: font
+:partnums:
+:sectnums:
+:sectlinks:
+:!compat-mode:
+:source-highlighter: rouge
+:imagesdir: images
+:ditaa-shadows: false
+:ditaa-transparent: true
+:attribute-missing: warn
+:xrefstyle: short
 
 include::chapters/preface.asciidoc[]
 
@@ -53,11 +70,14 @@ include::chapters/ops.asciidoc[]
 include::chapters/tweak.asciidoc[]
 
 [[appendix]]
-= Appendices
-// include::chapters/index.asciidoc[]
-
 include::chapters/building.asciidoc[]
 
 include::chapters/ap-beam_instructions.asciidoc[]
 
 include::chapters/ap-code_listings.asciidoc[]
+
+[[bibliography]]
+include::chapters/references.asciidoc[]
+
+//[index]
+//include::chapters/index.asciidoc[]

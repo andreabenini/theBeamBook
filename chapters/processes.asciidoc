@@ -418,7 +418,7 @@ See the following figure for an illustration of a process as memory:
 
 [[erlang_process_memory_1]]
 .Erlang Process Memory : Basic
-[shaape]
+[ditaa]
 ----
   +-------+  +-------+
   |  PCB  |  | Stack |
@@ -428,9 +428,7 @@ See the following figure for an illustration of a process as memory:
   | M-box |  | Heap  |
   +-------+  +-------+
 
-options:
- - ".*": {fill: [[0.7, 0.7, 0.7], no-shadow], frame: [[0.9, 0.9, 0.9], line]}
- - ".*": {text : ["Monospace 10", no-shadow]}
+
 ----
 
 
@@ -483,7 +481,7 @@ There are new versions of these BIFs that do a better
 job, hopefully they will be included in ERTS at the
 time of the printing of this book. Otherwise you
 can build your own version with the patch provided
-in the code section and the instructions in xref:CH-BuildingERTS[].
+in the code section and the instructions in xref:AP-BuildingERTS[].
 
 ****
 
@@ -583,7 +581,7 @@ true
 ----
 
 We can also print the content of some of the fields in
-the PCB with `hipe_bifs:show_pcb/1':
+the PCB with `hipe_bifs:show_pcb/1`:
 
 [source,erlang]
 ----
@@ -702,7 +700,7 @@ fields from the PCB that controls the shape of the heap:
 
 [[erlang_process_heap]]
 .Erlang Process Heap
-[shaape]
+[ditaa]
 ----
 
   hend ->  +----+    -
@@ -714,9 +712,7 @@ fields from the PCB that controls the shape of the heap:
   heap ->  +----+    -             -
           The Heap
 
-options:
- - ".*": {fill: [[0.7, 0.7, 0.7], no-shadow], frame: [[0.9, 0.9, 0.9], line]}
- - ".*": {text : ["Monospace 10", no-shadow]}
+
 ----
 
 But wait, how come we have a heap start and a heap end, but no start
@@ -727,7 +723,7 @@ heap and the stack are actually just one memory area:
 
 [[erlang_process_memory_2]]
 .Erlang Process Memory : Heap + Stack
-[shaape]
+[ditaa, separation=false]
 ----
  +-------+  +-------+
  |  PCB  |  | Stack |
@@ -737,9 +733,7 @@ heap and the stack are actually just one memory area:
  | M-box |  | Heap  |
  +-------+  +-------+
 
-options:
- - ".*": {fill: [[0.7, 0.7, 0.7], no-shadow], frame: [[0.9, 0.9, 0.9], line]}
- - ".*": {text : ["Monospace 10", no-shadow]}
+
 ----
 
 The stack grows towards lower memory addresses and the heap towards
@@ -748,7 +742,7 @@ by adding the stack top pointer to the picture:
 
 [[erlang_process_heap_and_stack]]
 .Erlang Process Heap and Stack
-[shaape]
+[ditaa]
 ----
   hend ->  +----+    -
            |....|    ^
@@ -761,9 +755,7 @@ by adding the stack top pointer to the picture:
   heap ->  +----+    -             -
           The Heap
 
-options:
- - ".*": {fill: [[0.7, 0.7, 0.7], no-shadow], frame: [[0.9, 0.9, 0.9], line]}
- - ".*": {text : ["Monospace 10", no-shadow]}
+
 ----
 
 If the pointers `htop` and `stop` were to meet, the
@@ -813,7 +805,7 @@ our original picture of a process as four memory areas:
 
 [[erlang_process_memory_3]]
 .Erlang Process Memory : GC
-[shaape]
+[ditaa, separation=false]
 ----
 
   +-------+               +-------+
@@ -824,9 +816,7 @@ our original picture of a process as four memory areas:
   | M-box |               | Heap  |  | Heap  |
   +-------+               +-------+  +-------+  - old_heap
 
-options:
- - ".*": {fill: [[0.7, 0.7, 0.7], no-shadow], frame: [[0.9, 0.9, 0.9], line]}
- - ".*": {text : ["Monospace 10", no-shadow]}
+
 ----
 
 When a process starts there is no old heap, but as soon as young data
@@ -916,7 +906,7 @@ mailboxes) and a varying number of heap fragments (`m-bufs`):
 
 [[erlang_process_memory_4]]
 .Erlang Process Memory : Messages
-[shaape]
+[ditaa, separation=false]
 ----
 
  +-------+             +-------+
@@ -925,16 +915,14 @@ mailboxes) and a varying number of heap fragments (`m-bufs`):
                        | free  |
  +-------+  +-------+  +-------+  +-------+
  | M-box |  | M-box |  | Heap  |  |  Old  |
- | intern|  | inbox |  |       |  | Heap  |
+ | intern|  | inq   |  |       |  | Heap  |
  +-------+  +-------+  +-------+  +-------+
 
  +-------+  +-------+  +-------+  +-------+
- | m-buf |  | m-buf |  | m-buf |  | m-buf |
+ | m−buf |  | m−buf |  | m−buf |  | m−buf |
  +-------+  +-------+  +-------+  +-------+
 
-options:
- - ".*": {fill: [[0.7, 0.7, 0.7], no-shadow], frame: [[0.9, 0.9, 0.9], line]}
- - ".*": {text : ["Monospace 10", no-shadow]}
+
 ----
 
 Each mailbox consists of a length and two pointers, stored in the fields
@@ -1040,7 +1028,7 @@ consider messages sent between Erlang nodes. Imagine two processes
 
 [[erlang_message_passing_1]]
 .Erlang Message Passing Step 1
-[shaape]
+[ditaa, separation=false]
 ----
                  P 1
  +---------------------------------+
@@ -1048,6 +1036,7 @@ consider messages sent between Erlang nodes. Imagine two processes
  | |  PCB  |  | Stack |  |  Old  | |
  | +-------+  +-------+  | Heap  | |
  |            | free  |  +-------+ |
+ |            |       |            |
  | +-------+  +-------+  +-------+ |
  | | M-box |  | Heap  |  | M-box | |
  | | inq   |  | [Msg] |  | intern| |
@@ -1064,22 +1053,21 @@ consider messages sent between Erlang nodes. Imagine two processes
  | |  PCB  |  | Stack |  |  Old  | |
  | +-------+  +-------+  | Heap  | |
  |            | free  |  +-------+ |
+ |            |       |            |
  | +-------+  +-------+  +-------+ |
  | | M-box |  | Heap  |  | M-box | |
  | | inq   |  |       |  | intern| |
  | +-------+  +-------+  +-------+ |
  +---------------------------------+
 
-options:
- - ".*": {fill: [[0.7, 0.7, 0.7], no-shadow], frame: [[0.9, 0.9, 0.9], line]}
- - ".*": {text : ["Monospace 10", no-shadow]}
+
 ----
 
 Process `P1` will then take the following steps:
 
 * Calculate the size of _Msg_.
-* Allocate space for the message (on or off `P2's` heap as described before).
-* Copy _Msg_ from `P1's` heap to the allocated space.
+* Allocate space for the message (on or off `P2` 's heap as described before).
+* Copy _Msg_ from `P1` 's heap to the allocated space.
 * Allocate and fill in an _ErlMessage_ struct wrapping up the message.
 * Link in the _ErlMessage_ either in the _ErlMsgQueue_ or in the _ErlMsgInQueue_.
 
@@ -1090,7 +1078,7 @@ on the heap:
 
 [[erlang_message_passing_2]]
 .Erlang Message Passing Step 2
-[shaape]
+[ditaa, separation=false]
 ----
                  P 1
  +---------------------------------+
@@ -1098,6 +1086,7 @@ on the heap:
  | |  PCB  |  | Stack |  |  Old  | |
  | +-------+  +-------+  | Heap  | |
  |            | free  |  +-------+ |
+ |            |       |            |
  | +-------+  +-------+  +-------+ |
  | | M-box |  | Heap  |  | M-box | |
  | | inq   |  | [Msg] |  | intern| |
@@ -1114,33 +1103,32 @@ on the heap:
  | |  PCB  |  | Stack |  |  Old  | |
  | +-------+  +-------+  | Heap  | |
  |            | free  |  +-------+ |
+ |            |       |            |
  | +-------+  +-------+  +-------+ |
  | | M-box |  | Heap  |  | M-box | |
- | | inq   |  |       |  | intern| |
- | |       |  | [Msg] |  |       | |
- | |       |  | ^     |  | first | |
- | +-------+  +-|-----+  +---|---+ |
- |              |            v     |
- |              |        +-------+ |
- |              |        |next:[]| |
- |              |        | m: *  | |
- |              |        +----|--+ |
- |              |             |    |
- |              +-------------+    |
+ | | inq   |  | [Msg] |  | intern| |
+ | |       |  |       |  |       | |
+ | |       |  |  ^    |  | first | |
+ | +-------+  +--|----+  +---|---+ |
+ |               |           v     |
+ |               |       +-------+ |
+ |               |       |next []| |
+ |               |       | m  *  | |
+ |               |       +----|--+ |
+ |               |            |    |
+ |               +------------+    |
  +---------------------------------+
 
-options:
- - ".*": {fill: [[0.7, 0.7, 0.7], no-shadow], frame: [[0.9, 0.9, 0.9], line]}
- - ".*": {text : ["Monospace 10", no-shadow]}
+
 ----
 
 If `P1` can not get the `main lock` of P2 or there is not enough space
-on `P2's` heap and the allocation strategy is _on_heap_ the message
+on `P2` 's heap and the allocation strategy is _on_heap_ the message
 will end up in an `m-buf` but linked from the internal mailbox:
 
 [[erlang_message_passing_3]]
 .Erlang Message Passing Step 3
-[shaape]
+[ditaa, separation=false]
 ----
                  P 1
  +---------------------------------+
@@ -1148,6 +1136,7 @@ will end up in an `m-buf` but linked from the internal mailbox:
  | |  PCB  |  | Stack |  |  Old  | |
  | +-------+  +-------+  | Heap  | |
  |            | free  |  +-------+ |
+ |            |       |            |
  | +-------+  +-------+  +-------+ |
  | | M-box |  | Heap  |  | M-box | |
  | | inq   |  | [Msg] |  | intern| |
@@ -1164,24 +1153,23 @@ will end up in an `m-buf` but linked from the internal mailbox:
  | |  PCB  |  | Stack |  |  Old  | |
  | +-------+  +-------+  | Heap  | |
  |            | free  |  +-------+ |
+ |            |       |            |
  | +-------+  +-------+  +-------+ |
  | | M-box |  | Heap  |  | M-box | |
  | | inq   |  |       |  | intern| |
  | |       |  |       |  |       | |
  | |       |  |       |  | first | |
  | +-------+  +-------+  +---|---+ |
- |              m-buf        v     |
+ |              m−buf        v     |
  |            +-------+  +-------+ |
- |         +->| [Msg] |  |next:[]| |
- |         |  |       |  | m: *  | |
+ |         +->| [Msg] |  |next []| |
+ |         |  |       |  | m  *  | |
  |         |  +-------+  +----|--+ |
  |         |                  |    |
  |         +------------------+    |
  +---------------------------------+
 
-options:
- - ".*": {fill: [[0.7, 0.7, 0.7], no-shadow], frame: [[0.9, 0.9, 0.9], line]}
- - ".*": {text : ["Monospace 10", no-shadow]}
+
 ----
 
 After a GC the message will be moved into
@@ -1192,7 +1180,7 @@ will end up in an `m-buf` and linked from the external mailbox:
 
 [[erlang_message_passing_4]]
 .Erlang Message Passing Step 4
-[shaape]
+[ditaa, separation=false]
 ----
                  P 1
  +---------------------------------+
@@ -1200,6 +1188,7 @@ will end up in an `m-buf` and linked from the external mailbox:
  | |  PCB  |  | Stack |  |  Old  | |
  | +-------+  +-------+  | Heap  | |
  |            | free  |  +-------+ |
+ |            |       |            |
  | +-------+  +-------+  +-------+ |
  | | M-box |  | Heap  |  | M-box | |
  | | inq   |  | [Msg] |  | intern| |
@@ -1216,24 +1205,21 @@ will end up in an `m-buf` and linked from the external mailbox:
  | |  PCB  |  | Stack |  |  Old  | |
  | +-------+  +-------+  | Heap  | |
  |            | free  |  +-------+ |
+ |            |       |            |
  | +-------+  +-------+  +-------+ |
  | | M-box |  | Heap  |  | M-box | |
  | | inq   |  |       |  | intern| |
  | |       |  |       |  |       | |
  | | first |  |       |  | first | |
  | +---|---+  +-------+  +-------+ |
- |     v        m-buf              |
- | +-------+  +-------+            |
- | |next:[]|  |       |            |
- | |   m:*--->| [Msg] |            |
- | +-------+  +-------+            |
- |                                 |
- |                                 |
+ |     v        m−buf              |
+ | +--------+  +-----+             |
+ | |next [] |  |     |             |
+ | |        |  |     |             |
+ | | m *------>|[Msg]|             |
+ | |        |  |     |             |
+ | +--------+  +-----+             |
  +---------------------------------+
-
-options:
- - ".*": {fill: [[0.7, 0.7, 0.7], no-shadow], frame: [[0.9, 0.9, 0.9], line]}
- - ".*": {text : ["Monospace 10", no-shadow]}
 ----
 
 After a GC the message will still be in the `m-buf`. Not until
@@ -1297,7 +1283,7 @@ memory area, PD, the process dictionary:
 
 [[erlang_process_memory_5]]
 .Erlang Process Memory : Process Dictionary
-[shaape]
+[ditaa, separation=false]
 ----
 
  +-------+             +-------+  +-------+
@@ -1310,12 +1296,10 @@ memory area, PD, the process dictionary:
  +-------+  +-------+  +-------+  +-------+
 
  +-------+  +-------+  +-------+  +-------+
- | m-buf |  | m-buf |  | m-buf |  | m-buf |
+ | m−buf |  | m−buf |  | m−buf |  | m−buf |
  +-------+  +-------+  +-------+  +-------+
 
-options:
- - ".*": {fill: [[0.7, 0.7, 0.7], no-shadow], frame: [[0.9, 0.9, 0.9], line]}
- - ".*": {text : ["Monospace 10", no-shadow]}
+
 ----
 
 With such a small array you are bound to get some collisions before the

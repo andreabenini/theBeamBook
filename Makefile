@@ -1,20 +1,17 @@
-ABFLAGS = --backend=docbook --doctype=book
-
-DBLATEX_OPTS = -P latex.output.revhistory=0 -P doc.collab.show=0
+ASSET_CHAPTERS = $(shell find chapters -type f)
 
 all: chapters/contributors.txt beam-book.pdf index.html
 
 chapters/contributors.txt: .git
 	./bin/gitlog.sh $@
 
-xml/beam-book-from-ab.xml:  chapters/opcodes_doc.asciidoc
-	asciidoc $(ABFLAGS) -o $@ book.asciidoc
+beam-book.pdf:  chapters/opcodes_doc.asciidoc book.asciidoc chapters/contributors.txt $(ASSET_CHAPTERS)
+	asciidoctor-pdf  -r ./style/custom-pdf-converter.rb -r asciidoctor-diagram -r ./style/custom-admonition-block.rb  -a config=./style/ditaa.cfg --doctype=book -a pdf-style=./style/pdf-theme.yml book.asciidoc -o $@
 
-beam-book.pdf: xml/beam-book-from-ab.xml
-	dblatex $(DBLATEX_OPTS) xml/beam-book-from-ab.xml -o $@
-
-index.html:
-	asciidoctor -r asciidoctor-diagram --backend=html5 --doctype=book -a icons=font -a toc2 -o site/index.html book.asciidoc
+index.html: $(ASSET_CHAPTERS)
+	cp -r images site
+	asciidoctor -r asciidoctor-diagram  -r ./style/custom-admonition-block.rb -a config=style/ditaa.cfg --backend=html5 --doctype=book -o site/index.html book.asciidoc --trace
+	rsync -R code/*/*.png site
 
 code/book/ebin/generate_op_doc.beam: code/book/src/generate_op_doc.erl
 	erlc -o $(dir $@) $<
@@ -27,4 +24,6 @@ genop.tab:
 	touch $@
 
 clean:
-	rm -f beam-book.pdf site/index.html site/*.png site/*.md5 xml/*.png xml/*.md5 xml/beam-book-from-ab.xml
+	find site -type f -name '.[^gitignore]*' -delete
+	rm -rfv beam-book.pdf site/index.html site/*.png site/*.md5 xml/*.png xml/*.md5 xml/beam-book-from-ab.xml ./images/diag-*.png site/code/*/*.png site/images/*
+	rmdir site/code/* site/images site/code
