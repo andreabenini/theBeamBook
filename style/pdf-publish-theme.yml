@@ -1,0 +1,35 @@
+extends: pdf-theme.yml
+
+page:
+  size: [6in, 9in]
+  margin: [0.75in, 0.75in, 0.75in, 0.75in]
+  margin-inner: 0.85in   # Inside margin (gutter)
+  margin-outer: 0.75in  # Outside margin
+  margin-top: 0.75in
+  margin-bottom: 0.85in
+  bleed: 0.125in
+
+
+base:
+  font_size: 9.5
+  line_height: 1.3
+
+heading:
+  h1_font_size: 18
+  h2_font_size: 14
+  h3_font_size: 12
+  h4_font_size: 11
+  h5_font_size: 10
+  h6_font_size: 9.5
+
+code:
+  font_size: 8.5
+  line_height: 1.1
+
+table:
+  font_size: 8.5
+  cell_padding: 2
+
+footer:
+  height: 0.70in
+  line_height: 1

@@ -31,75 +31,61 @@ later in this chapter.
 ==== Prerequisites
 
 You will need a number of tools in order to fetch, unpack and
-build from source. The file Install.md lists some of the most
+build from source. The file `HOWTO/INSTALL.md` lists the most
 important ones.
 
-Gven that we have a recent Ubuntu installation to start with
-many of the needed tools such as tar, make, perl and gcc should
-already be installed. But some tools like git, m4 and ncurses
+Given that we have a recent Ubuntu installation to start with
+some of the tools such as sed, tar, and perl should
+already be installed. But others like git, make, gcc, m4 and ncurses
 will probably need to be installed.
 
-
-
-If you add a source URI to your apt configuration you will
-be able to use the build-dep command to get the needed sources
-to build erlang. You can do this by uncommenting the deb-src
-line for your distribution in /etc/apt/sources.list.
-
-For the Yakkety Yak release you could add the line by:
+On a recent Ubuntu installation, the following command will get most of the
+tools you need:
 
 [source,sh]
 ----
-> sudo cat "deb-src http://se.archive.ubuntu.com/ubuntu/ \
-yakkety main restricted" >> /etc/apt/sources.list
+> sudo apt-get install build-essential git autoconf m4 \
+>   zlib1g-dev ncurses-dev libssl-dev
 ----
 
-Then the following commands will get almost all the tools you need:
+If you want to build with support for wxWidgets you need to also install
+the wx libraries:
 
 [source,sh]
 ----
-> sudo apt-get install git autoconf m4
-> sudo apt-get build-dep erlang
+> sudo apt-get install libwxgtk3.2-dev wx3.2-i18n \
+>   wx3.2-examples wx3.2-doc
 ----
 
-If you have a slightly older version of Ubuntu like Saucy and you
-want to build with wx support, you need to get the wx libraries:
+and optionally for WebView support in WX:
 
 [source,sh]
 ----
-> sudo apt-key adv --fetch-keys http://repos.codelite.org/CodeLite.asc
-> sudo apt-add-repository 'deb http://repos.codelite.org/wx3.0/ubuntu/ saucy universe'
-> sudo apt-get update
-> sudo apt-get install libwxbase3.0-0-unofficial libwxbase3.0-dev libwxgtk3.0-0-unofficial \
-libwxgtk3.0-dev wx3.0-headers wx-common libwxbase3.0-dbg libwxgtk3.0-dbg wx3.0-i18n \
-wx3.0-examples wx3.0-doc
+> sudo apt-get install libwxgtk-webview3.2-1t64
 ----
 
-
-You might also want to create a directory where you keep the
-source code and also install your home built version without
-interfering with any pre built and system wide installations.
+If you also want to be able to build the Erlang/OTP documentation, you'll
+need some more tools:
 
 [source,sh]
 ----
-> cd
-> mkdir otp
+> sudo apt-get install xsltproc libxml2-utils
 ----
 
-=== Getting the source
+==== Getting the source
 There are two main ways of getting the source. You can download a
 tarball from http://www.erlang.org/download.html[erlang.org] or you
-can check out the source code directly from Github.
+can check out the source code directly from
+https://github.com/erlang/otp[Github].
 
 If you want to quickly download a stable version of the source try:
 
 [source,sh]
 ----
 > cd ~/otp
-> wget http://erlang.org/download/otp_src_19.1.tar.gz
-> tar -xzf otp_src_19.1.tar.gz
-> cd otp_src_19.1
-> export ERL_TOP=`pwd`
+> wget http://erlang.org/download/otp_src_27.0.tar.gz
+> tar -xzf otp_src_27.0.tar.gz
+> cd otp_src_27.0
 ----
 
 or if you want to be able to easily update to the latest bleeding
@@ -108,25 +94,94 @@ check out the source through git:
 
 [source,sh]
 ----
-> cd ~/otp
-> git clone https://github.com/erlang/otp.git source
-> cd source
-> export ERL_TOP=`pwd`
+> git clone https://github.com/erlang/otp.git
+> cd otp
+----
+
+If you build an older version of Erlang you might need to run autoconf.
+[source,sh]
+----
 > ./otp_build autoconf
 ----
 
-Now you are ready to build and install Erlang:
+==== Configuring and building
+Now you are ready to build and install Erlang. To avoid interfering with
+any system wide installation, you'll probably want to configure the
+installation prefix to be some directory private to you:
 
 [source,sh]
 ----
-> export LANG=C
-> ./configure --prefix=$HOME/otp/install
+> ./configure --prefix=$HOME/.local
 > make
 > make install
-> export PATH=$HOME/otp/install/bin/:$PATH
-> export ROOTDIR=$HOME/otp/install/
-
+> export PATH="$HOME/.local/bin:$PATH"
 ----
+
+==== Alternative Beam emulator builds
+There are currently two main _flavors_ of emulator builds: the JIT-enabled
+flavor, `jit` (which is the default on supported platforms), and the
+non-JIT flavor `emu`. You may also see the name `smp`, but that is just an
+alias meaning the default flavor on the current platform.
+
+When you run `make`, you can select the flavor as follows:
+
+[source,sh]
+----
+> make FLAVOR=emu
+----
+
+(Naturally, if you have configured with `--disable-jit`, or your platform
+does not support it, it will not be able to build the `jit` flavor even if
+you ask it to do so.)
+
+You can also build differently instrumented variants of the emulator by
+specifying a _build type_. At runtime, calling
+`erlang:system_info(build_type)` will tell you how the currently running
+emulator was built. The standard build is called `opt`.
+
+To build one of the alternative emulator types, you need to set the `TYPE`
+variable. You can combine this with the `FLAVOR` variable.
+
+[source,sh]
+----
+> make
+> make TYPE=debug
+> make FLAVOR=emu TYPE=lcnt
+----
+
+Apart from `debug`, there are several other instrumented variants that can
+be built, for example `valgrind`. To run these directly out of the build
+tree (from the top directory of the source code), a special launch script
+`bin/cerl` can be used to start an instrumented emulator:
+
+[source,sh]
+----
+> bin/cerl -debug
+----
+
+The `cerl` script also helps you with the additional output files created
+when running for example a `valgrind`-instrumented emulator. See
+`HOWTO/INSTALL.md` and `HOWTO/DEVELOPMENT.md` for details.
+
+If you want `make install` to include these variant builds and not just the
+default build, you will need to run it separately for each specific
+combination:
+
+[source,sh]
+----
+> make install
+> make install TYPE=debug
+> make install FLAVOR=emu TYPE=lcnt
+----
+
+It will then be possible for a user to select the variant they want to run,
+using the `-emu_flavor` and `-emu_type` flags:
+
+[source,sh]
+----
+> erl -emu_flavor emu -emu_type lcnt
+----
+
 
 === Building with Kerl
 

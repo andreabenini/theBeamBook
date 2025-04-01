@@ -1,10 +1,16 @@
-= The Erlang Runtime System
+= The BEAM Book: Understanding the Erlang Runtime System
+Erik Stenman
 :author: Erik Stenman
+:title: The BEAM Book: Understanding the Erlang Runtime System
+:subject: Computer Science, Programming Languages
+:keywords: Erlang, BEAM, ERTS, Concurrency, Programming
+:producer: HappiHacking
+:creator: Asciidoctor PDF
+:doctype: book
 :encoding: utf-8
 :lang: en
-:toc: left
-:toclevels: 3
-:experimental:
+:toc: macro
+:toclevels: 2
 :icons: font
 :partnums:
 :sectnums:
@@ -16,11 +22,52 @@
 :ditaa-transparent: true
 :attribute-missing: warn
 :xrefstyle: short
+:footer:
+:footer-style: normal
+
+
+[.text-center]
+The BEAM Book
+
+Written by Erik Stenman and contributors.
+
+This work is licensed under a Creative Commons Attribution 4.0 International License (CC BY 4.0).
+This means you are free to share, copy, redistribute, and modify this book under the following terms:
+
+ * Attribution: Credit must be given to the original authors and contributors.
+ * No Additional Restrictions: You cannot impose legal restrictions that prevent others from using the book freely under the same terms.
+
+*Contributors:* Special thanks to Richard Carlsson, Yoshihiro Tanaka, Roberto Aloi and Dmytro Lytovchenko.
+
+For full attribution details, visit:
+link:https://github.com/happi/theBeamBook/graphs/contributors[].
+
+*Free Digital Version Available.*
+
+This book is freely available online at
+link:https://github.com/happi/theBeamBook/[]
+under the Creative Commons license. This printed edition is provided for convenience.
+
+For more information on the Creative Commons license, visit:
+
+link:https://creativecommons.org/licenses/by/4.0/[].
+
+First Edition, 2025
+
+ISBN: 978-91-531-4253-9
+
+[.text-center]
+© 2025 Erik Stenman.
+
+
+toc::[]
+
 
 include::chapters/preface.asciidoc[]
 
 // Part I
 [[P-ERTS]]
+
 = Understanding ERTS
 
 include::chapters/introduction.asciidoc[]
@@ -41,13 +88,13 @@ include::chapters/calls.asciidoc[]
 
 include::chapters/beam_loader.asciidoc[]
 
-include::chapters/beam_internal_instructions.asciidoc[]
-
 include::chapters/scheduling.asciidoc[]
 
 include::chapters/memory.asciidoc[]
 
-include::chapters/data_structures.asciidoc[]
+include::chapters/gc.asciidoc[]
+
+// include::chapters/data_structures.asciidoc[]
 
 include::chapters/io.asciidoc[]
 
@@ -55,19 +102,23 @@ include::chapters/distribution.asciidoc[]
 
 include::chapters/c.asciidoc[]
 
-include::chapters/hipe.asciidoc[]
-
 // Part II
 [[P-Running]]
+
 = Running ERTS
-
-include::chapters/tracing.asciidoc[]
-
-include::chapters/debugging.asciidoc[]
 
 include::chapters/ops.asciidoc[]
 
-include::chapters/tweak.asciidoc[]
+include::chapters/debugging.asciidoc[]
+
+include::chapters/tracing.asciidoc[]
+
+include::chapters/testing.asciidoc[]
+
+include::chapters/profiling.asciidoc[]
+
+// include::chapters/monitor.asciidoc[]
+// include::chapters/tweak.asciidoc[]
 
 [[appendix]]
 include::chapters/building.asciidoc[]
@@ -79,5 +130,5 @@ include::chapters/ap-code_listings.asciidoc[]
 [[bibliography]]
 include::chapters/references.asciidoc[]
 
-//[index]
-//include::chapters/index.asciidoc[]
+[index]
+== Index
