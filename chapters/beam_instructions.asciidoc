@@ -22,7 +22,7 @@ This is the instruction set which we will cover in this chapter.
 The other instruction set, the specific, is an optimized instruction
 set used by the Beam to implement the external instruction set. To
 give you an understanding of how the Beam works we will cover this
-instruction set in xref:CH-Internal_instructions[]. The internal
+instruction set in the online appendix. The internal
 instruction set can change without warning between minor version or
 even in patch releases. Basing any tool on the internal instruction
 set is risky.
@@ -45,7 +45,10 @@ non backwards compatible way this number would be changed.
 The file genop.tab is used as input by `beam_makeops` which is a perl script
 which generate code from the ops tabs. The generator is used both to generate
 Erlang code for the compiler (beam_opcodes.hrl and beam_opcodes.erl) and to
-generate C code for the emulator ( TODO: Filenames).
+generate C code for the emulator (beam_opcodes.c and beam_opcodes.h; for
+the traditional BEAM interpreter beam_hot.h, beam_warm.h, beam_cold.h are
+also generated; and for BeamAsm beamasm_emit.h and beamasm_protos.h are
+generated).
 
 Any line in the file starting with "#" is a comment and ignored by
 `beam_makeops`. The file can contain definitions, which turns into a
@@ -101,8 +104,8 @@ Given the file beamexample1.erl:
 id(I) when is_integer(I) -> I.
 ----
 
-When compiled with `erlc -S beamexample.erl` we get the following
-beamexmaple.S file:
+When compiled with `erlc -S beamexample1.erl` we get the following
+beamexmaple1.S file:
 
 [source,erlang]
 ----
@@ -201,7 +204,7 @@ see in the next section there are several different call instructions.
 
 === Calls
 
-As we have seen in xref:CH-Calls[] there are several different types
+As we will see in xref:CH-Calls[], there are several different types
 of calls in Erlang. To distinguish between local and remote calls
 in the instruction set, remote calls have `+_ext+` in their instruction
 names. Local calls just have a label in the code of the module, while
@@ -445,7 +448,7 @@ To remedy this there is a hack in ERTS to recognize this pattern and
 avoid scanning the whole message queue for the return message.
 
 The compiler recognizes code that uses a newly created reference (ref)
-in a receive (see xref:ref_trick_code[]), and emits code to avoid the
+in a receive, and emits code to avoid the
 long inbox scan since the new ref can not already be in the inbox.
 
 [source,erlang]
@@ -457,8 +460,7 @@ long inbox scan since the new ref can not already be in the inbox.
   end.
 ----
 
-This gives us the following skeleton for a complete receive, see
-xref:ref_receive[].
+This gives us the following skeleton for a complete receive.
 
 [source,erlang]
 ----

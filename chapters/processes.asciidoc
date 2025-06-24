@@ -57,7 +57,7 @@ In Elixir you can call the function in the `shell_default` module as
 ----
 $ erl
 Erlang/OTP 19 [erts-8.1] [source] [64-bit] [smp:4:4] [async-threads:10]
-              [hipe] [kernel-poll:false]
+               [kernel-poll:false]
 
 Eshell V8.1  (abort with ^G)
 1> i().
@@ -365,7 +365,7 @@ $ erl -hidden -sname observer -run observer
 When Observer is started it will show you a system overview,
 see the following screen shot:
 
-image::../images/observer_system.png[]
+image::../images/observer_system.png[Observer system information window showing system statistics including memory usage, atom count, process count, and scheduler information]
 
 We will go over some of this information in detail later in
 this and the next chapter. For now we will just use Observer to look
@@ -373,7 +373,7 @@ at the running processes. First we take a look at the
 `Applications` tab which shows the ((supervision
 tree)) of the running system:
 
-image::../images/observer_applications.png[]
+image::../images/observer_applications.png[Observer applications tab showing running applications in a tree structure with supervision hierarchy]
 
 Here we get a graphical view of how the processes are linked. This is
 a very nice way to get an overview of how a system is structured.
@@ -383,7 +383,7 @@ floating in space connected to each other through links.
 To actually get some useful information about the processes
 we switch to the `Processes` tab:
 
-image::../images/observer_processes.png[]
+image::../images/observer_processes.png[Observer processes tab displaying a table of running processes with columns for PID, name, memory usage, message queue length, and reductions]
 
 In this view we get basically the same information as with
 `i/0` in the shell. We see the pid, the registered name,
@@ -394,7 +394,7 @@ We can also look into a process by double clicking on its
 row, for example on the code server, to get the kind of
 information you can get with `process_info/2`:
 
-image::../images/observer_code_server.png[]
+image::../images/observer_code_server.png[Observer process information window showing detailed statistics for the code_server process including state, memory usage, message queue, and stack trace]
 
 We will not go through what all this information means
 right now, but if you keep on reading all will eventually
@@ -460,216 +460,246 @@ can grow and shrink as needed. We will see exactly how this works in
 later chapters. The PCB on the other hand is statically allocated and
 contains a number of fields that controls the process.
 
-We can actually inspect some of these memory areas by using _HiPE's
-Built In Functions_ (HiPE BIFs) for introspection. With these BIFs we
-can print out the memory content of stacks, heaps, and the PCB. The
-raw data is printed and in most cases a human readable version is
-pretty printed alongside the data. To really understand everything
-that we see when we inspect the memory we will need to know more about
-the Erlang tagging scheme (which we will go through in xref:CH-TypeSystem[]
-and about the execution model and error handling
-which we will go through in xref:CH-BEAM[], but using these
-tools will give us a nice view of how a process really is just memory.
+We can inspect some of these memory regions with built-in introspection calls.
+For example, `erlang:process_info/2` lets you ask a process for its `stack_size`,
+`heap_size`, `total_heap_size`, or a raw `backtrace` binary,
+while the `current_stacktrace` item returns the stack as a structured
+list of `{M,F,A,Location}` tuples that you can pattern-match or pretty-print yourself.
+The shell helper `c:bt(Pid)` is just a convenience wrapper around `erlang:process_display(Pid, backtrace)`.
+Combined with `process_info` items such as `memory` or `reductions`,
+these queries give a view of a process’s stack, heap, and PCB-like fields.
 
-// TODO: replace the HiPE BIFs section
+For a deeper, byte-level view the runtime ships with the **Erlang Toolkit for Pathologist (EPT)**—a collection of GDB macros (`etp-stackdump`, `etp-heapdump`, `etp-process-info`, and friends) that walk live BEAM data structures in a paused VM or core dump. 
 
-.HiPE's Built In Functions (HiPE BIFs)
-****
-The HiPE BIFs are not an official part of Erlang/OTP.
-They are not supported by the OTP team.
-They might be removed or changed at any time, so
-don't base your mission critical services on them.
+See xref:AP-BuildingERTS[] for more information on how to build the a debug version of the
+Erlang runtime system with ETP support. 
 
-These BIFs examine the internals of ERTS in a way that
-might not be safe. The BIFs for introspection often just
-print to standard out and you might be surprised where that
-output ends up.
-
-These BIFs can lock up a scheduler thread for a long time
-without using any reductions (we will look at what that
-means in the next chapter). Printing the heap of a
-very large process for example can take a long time.
-
-These BIFs are only meant to be used for debugging
-and you use them at your own risk. You should probably
-not run them on a live system.
-
-Many of the HiPE BIFs where written by the author in
-the mid nineties (before 64 bit Erlang existed) and
-the printouts on a 64 bit machine might be a bit off.
-There are new versions of these BIFs that do a better
-job, hopefully they will be included in ERTS at the
-time of the printing of this book. Otherwise you
-can build your own version with the patch provided
-in the code section and the instructions in xref:AP-BuildingERTS[].
-
-****
-
-We can see the context of the stack of a process with `hipe_bifs:show_estack/1`:
+We can see the context of the stack of a process with `erlang:process_display/2`:
 
 [source,erlang]
 ----
-1> hipe_bifs:show_estack(self()).
- |                BEAM  STACK              |
- |            Address |           Contents |
- |--------------------|--------------------| BEAM ACTIVATION RECORD
- | 0x00007f9cc3238310 | 0x00007f9cc2ea6fe8 | BEAM PC shell:exprs/7 + 0x4e
- | 0x00007f9cc3238318 | 0xfffffffffffffffb | []
- | 0x00007f9cc3238320 | 0x000000000000644b | none
- |--------------------|--------------------| BEAM ACTIVATION RECORD
- | 0x00007f9cc3238328 | 0x00007f9cc2ea6708 | BEAM PC shell:eval_exprs/7 + 0xf
- | 0x00007f9cc3238330 | 0xfffffffffffffffb | []
- | 0x00007f9cc3238338 | 0xfffffffffffffffb | []
- | 0x00007f9cc3238340 | 0x000000000004f3cb | cmd
- | 0x00007f9cc3238348 | 0xfffffffffffffffb | []
- | 0x00007f9cc3238350 | 0x00007f9cc3237102 | {value,#Fun<shell.5.104321512>}
- | 0x00007f9cc3238358 | 0x00007f9cc323711a | {eval,#Fun<shell.21.104321512>}
- | 0x00007f9cc3238360 | 0x00000000000200ff | 8207
- | 0x00007f9cc3238368 | 0xfffffffffffffffb | []
- | 0x00007f9cc3238370 | 0xfffffffffffffffb | []
- | 0x00007f9cc3238378 | 0xfffffffffffffffb | []
- |--------------------|--------------------| BEAM ACTIVATION RECORD
- | 0x00007f9cc3238380 | 0x00007f9cc2ea6300 | BEAM PC shell:eval_loop/3 + 0x47
- | 0x00007f9cc3238388 | 0xfffffffffffffffb | []
- | 0x00007f9cc3238390 | 0xfffffffffffffffb | []
- | 0x00007f9cc3238398 | 0xfffffffffffffffb | []
- | 0x00007f9cc32383a0 | 0xfffffffffffffffb | []
- | 0x00007f9cc32383a8 | 0x000001a000000343 | <0.52.0>
- |....................|....................| BEAM CATCH FRAME
- | 0x00007f9cc32383b0 | 0x0000000000005a9b | CATCH 0x00007f9cc2ea67d8
- |                    |                    |  (BEAM shell:eval_exprs/7 + 0x29)
- |********************|********************|
- |--------------------|--------------------| BEAM ACTIVATION RECORD
- | 0x00007f9cc32383b8 | 0x000000000093aeb8 | BEAM PC normal-process-exit
- | 0x00007f9cc32383c0 | 0x00000000000200ff | 8207
- | 0x00007f9cc32383c8 | 0x000001a000000343 | <0.52.0>
- |--------------------|--------------------|
+1> erlang:process_display(self(), backtrace).
+Program counter: 0x00007fdf9baa2e78 (erlang:self/0 + 32)
+
+0x00007fdedf247480 Return addr 0x00007fdf9baa2118 (erlang:process_display/2 + 128)
+y(0)     []
+y(1)     backtrace
+y(2)     <0.89.0>
+
+0x00007fdedf2474a0 Return addr 0x00007fdf9bbb7644 (erl_eval:do_apply/7 + 308)
+y(0)     none
+y(1)     []
+
+0x00007fdedf2474b8 Return addr 0x00007fdf9bf0e430 (shell:exprs/7 + 536)
+y(0)     []
+y(1)     []
+y(2)     []
+y(3)     []
+y(4)     cmd
+y(5)     []
+y(6)     {value,#Fun<shell.5.46532814>}
+y(7)     {eval,#Fun<shell.23.46532814>}
+y(8)     #Ref<0.908573933.3456499713.143140>
+y(9)     []
+
+0x00007fdedf247510 Return addr 0x00007fdf9bf0dc60 (shell:eval_exprs/7 + 152)
+y(0)     []
+y(1)     []
+y(2)     []
+y(3)     []
+y(4)     <0.88.0>
+y(5)     Catch 0x00007fdf9bf0dd0e (shell:eval_exprs/7 + 326)
+
+0x00007fdedf247548 Return addr 0x00007fdf9bf0d87c (shell:eval_loop/4 + 564)
+y(0)     #Ref<0.908573933.3456499713.143140>
+y(1)     #Ref<0.908573933.3456499713.143160>
+y(2)     <0.88.0>
+
+0x00007fdedf247568 Return addr 0x00007fdf9ba2d1f8 (<terminate process normally>)
 true
-2>
 ----
 
 We will look closer at the values on the stack and the
 heap in xref:CH-TypeSystem[].
-The content of the heap is printed by `hipe_bifs:show_heap/1`.
-Since we do not want to list a large heap here we'll just
-spawn a new process that does nothing and show that heap:
+
+
+You can inspect the heap of a process with RTP and a debug version of
+the BEAM. 
+
+Assuming you have built a debug version:
+
+[source,bash]
+----
+$ERL_TOP/bin/cerl -debug -rgdb
+GNU gdb (Ubuntu 15.0.50.20240403-0ubuntu1) 15.0.50.20240403-git
+...
+Reading symbols from beam.debug.smp...
+%---------------------------------------------------------------------------
+% Use etp-help for a command overview and general help.
+%
+% To use the Erlang support module, the environment variable ROOTDIR
+% must be set to the toplevel installation directory of Erlang/OTP,
+% so the etp-commands file becomes:
+%     $ROOTDIR/erts/etc/unix/etp-commands
+% Also, erl and erlc must be in the path.
+%---------------------------------------------------------------------------
+etp-set-max-depth 20
+etp-set-max-string-length 100
+--------------- System Information ---------------
+OTP release: 24
+ERTS version: 12.3.2.17
+Arch: x86_64-pc-linux-gnu
+Endianness: Little
+Word size: 64-bit
+BeamAsm support: yes
+--Type <RET> for more, q to quit, c to continue without paging--
+SMP support: yes
+Thread support: yes
+Kernel poll: Supported
+Debug compiled: yes
+Lock checking: yes
+Lock counting: no
+System not initialized
+--------------------------------------------------
+----
+Then you can start the BEAM with run.
+
+[source,bash]
+----
+
+(gdb) run
+Starting program: /home/happi/hh/theBeamBook/otp24/bin/x86_64-pc-linux-gnu/beam.debug.smp -- -root /home/happi/hh/theBeamBook/otp24 -progname /home/happi/hh/theBeamBook/otp24/bin/cerl -debug -- -home /home/happi -- -emu_type debug
+
+This GDB supports auto-downloading debuginfo from the following URLs:
+  <https://debuginfod.ubuntu.com>
+Enable debuginfod for this session? (y or [n]) y
+Debuginfod has been enabled.
+To make this setting permanent, add 'set debuginfod enabled on' to .gdbinit.
+warning: could not find '.gnu_debugaltlink' file for /lib/x86_64-linux-gnu/libtinfo.so.6
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+[New Thread 0x7fffb6baf6c0 (LWP 2185)]
+...
+[New Thread 0x7fff9f4fa6c0 (LWP 2232)]
+Erlang/OTP 24 [erts-12.3.2.17] [source] [64-bit] [smp:16:16] [ds:16:16:10] [async-threads:1] [jit] [type-assertions] [debug-compiled] [lock-checking]
+
+Eshell V12.3.2.17  (abort with ^G)
+1>
+----
+
+Let us start a process with some dynamic data on the heap:
 
 [source,erlang]
 ----
-2> hipe_bifs:show_heap(spawn(fun () -> ok end)).
-From: 0x00007f7f33ec9588 to 0x00007f7f33ec9848
- |                 H E A P                 |
- |            Address |           Contents |
- |--------------------|--------------------|
- | 0x00007f7f33ec9588 | 0x00007f7f33ec959a | #Fun<erl_eval.20.52032458>
- | 0x00007f7f33ec9590 | 0x00007f7f33ec9839 | [[]]            
- | 0x00007f7f33ec9598 | 0x0000000000000154 | Thing Arity(5) Tag(20)
- | 0x00007f7f33ec95a0 | 0x00007f7f3d3833d0 | THING
- | 0x00007f7f33ec95a8 | 0x0000000000000000 | THING
- | 0x00007f7f33ec95b0 | 0x0000000000600324 | THING
- | 0x00007f7f33ec95b8 | 0x0000000000000000 | THING
- | 0x00007f7f33ec95c0 | 0x0000000000000001 | THING
- | 0x00007f7f33ec95c8 | 0x000001d0000003a3 | <0.58.0>        
- | 0x00007f7f33ec95d0 | 0x00007f7f33ec95da | {[],{eval...    
- | 0x00007f7f33ec95d8 | 0x0000000000000100 | Arity(4)
- | 0x00007f7f33ec95e0 | 0xfffffffffffffffb | []              
- | 0x00007f7f33ec95e8 | 0x00007f7f33ec9602 | {eval,#Fun<shell.21.104321512>}
- | 0x00007f7f33ec95f0 | 0x00007f7f33ec961a | {value,#Fun<shell.5.104321512>}... 
- | 0x00007f7f33ec95f8 | 0x00007f7f33ec9631 | [{clause...     
+-module(mini_proc).
+-export([wait/0]).
 
- ...
-
- | 0x00007f7f33ec97d0 | 0x00007f7f33ec97fa | #Fun<shell.5.104321512>
- | 0x00007f7f33ec97d8 | 0x00000000000000c0 | Arity(3)
- | 0x00007f7f33ec97e0 | 0x0000000000000e4b | atom            
- | 0x00007f7f33ec97e8 | 0x000000000000001f | 1               
- | 0x00007f7f33ec97f0 | 0x0000000000006d0b | ok              
- | 0x00007f7f33ec97f8 | 0x0000000000000154 | Thing Arity(5) Tag(20)
- | 0x00007f7f33ec9800 | 0x00007f7f33bde0c8 | THING
- | 0x00007f7f33ec9808 | 0x00007f7f33ec9780 | THING
- | 0x00007f7f33ec9810 | 0x000000000060030c | THING
- | 0x00007f7f33ec9818 | 0x0000000000000002 | THING
- | 0x00007f7f33ec9820 | 0x0000000000000001 | THING
- | 0x00007f7f33ec9828 | 0x000001d0000003a3 | <0.58.0>        
- | 0x00007f7f33ec9830 | 0x000001a000000343 | <0.52.0>        
- | 0x00007f7f33ec9838 | 0xfffffffffffffffb | []              
- | 0x00007f7f33ec9840 | 0xfffffffffffffffb | []              
- |--------------------|--------------------|
-true
-3> 
-
+wait() ->
+  X = {timestamp, erlang:timestamp()},
+  receive _ -> X end,
+  X.
 ----
 
-We can also print the content of some of the fields in
-the PCB with `hipe_bifs:show_pcb/1`:
+Now we can compile and start that process in the shell within the debugger:
 
 [source,erlang]
 ----
-3> hipe_bifs:show_pcb(self()).                                            
- P: 0x00007f7f3cbc0400
- ---------------------------------------------------------------
- Offset| Name        | Value              | *Value             |
-     0 | id          | 0x000001d0000003a3 |                    |
-    72 | htop        | 0x00007f7f33f15298 |                    |
-    96 | hend        | 0x00007f7f33f16540 |                    |
-    88 | heap        | 0x00007f7f33f11470 |                    |
-   104 | heap_sz     | 0x0000000000000a1a |                    |
-    80 | stop        | 0x00007f7f33f16480 |                    |
-   592 | gen_gcs     | 0x0000000000000012 |                    |
-   594 | max_gen_gcs | 0x000000000000ffff |                    |
-   552 | high_water  | 0x00007f7f33f11c50 |                    |
-   560 | old_hend    | 0x00007f7f33e90648 |                    |
-   568 | old_htop    | 0x00007f7f33e8f8e8 |                    |
-   576 | old_head    | 0x00007f7f33e8e770 |                    |
-   112 | min_heap_.. | 0x00000000000000e9 |                    |
-   328 | rcount      | 0x0000000000000000 |                    |
-   336 | reds        | 0x0000000000002270 |                    |
-    16 | tracer      | 0xfffffffffffffffb |                    |
-    24 | trace_fla.. | 0x0000000000000000 |                    |
-   344 | group_lea.. | 0x0000019800000333 |                    |
-   352 | flags       | 0x0000000000002000 |                    |
-   360 | fvalue      | 0xfffffffffffffffb |                    |
-   368 | freason     | 0x0000000000000000 |                    |
-   320 | fcalls      | 0x00000000000005a2 |                    |
-   384 | next        | 0x0000000000000000 |                    |
-    48 | reg         | 0x0000000000000000 |                    |
-    56 | nlinks      | 0x00007f7f3cbc0750 |                    |
-   616 | mbuf        | 0x0000000000000000 |                    |
-   640 | mbuf_sz     | 0x0000000000000000 |                    |
-   464 | dictionary  | 0x0000000000000000 |                    |
-   472 | seq..clock  | 0x0000000000000000 |                    |
-   480 | seq..astcnt | 0x0000000000000000 |                    |
-   488 | seq..token  | 0xfffffffffffffffb |                    |
-   496 | intial[0]   | 0x000000000000320b |                    |
-   504 | intial[1]   | 0x0000000000000c8b |                    |
-   512 | intial[2]   | 0x0000000000000002 |                    |
-   520 | current     | 0x00007f7f3be87c20 | 0x000000000000ed8b |
-   296 | cp          | 0x00007f7f3d3a5100 | 0x0000000000440848 |
-   304 | i           | 0x00007f7f3be87c38 | 0x000000000044353a |
-   312 | catches     | 0x0000000000000001 |                    |
-   224 | arity       | 0x0000000000000000 |                    |
-   232 | arg_reg     | 0x00007f7f3cbc04f8 | 0x000000000000320b |
-   240 | max_arg_reg | 0x0000000000000006 |                    |
-   248 | def..reg[0] | 0x000000000000320b |                    |
-   256 | def..reg[1] | 0x0000000000000c8b |                    |
-   264 | def..reg[2] | 0x00007f7f33ec9589 |                    |
-   272 | def..reg[3] | 0x0000000000000000 |                    |
-   280 | def..reg[4] | 0x0000000000000000 |                    |
-   288 | def..reg[5] | 0x00000000000007d0 |                    |
-   136 | nsp         | 0x0000000000000000 |                    |
-   144 | nstack      | 0x0000000000000000 |                    |
-   152 | nstend      | 0x0000000000000000 |                    |
-   160 | ncallee     | 0x0000000000000000 |                    |
-    56 | ncsp        | 0x0000000000000000 |                    |
-    64 | narity      | 0x0000000000000000 |                    |
- ---------------------------------------------------------------
-
-true
-4>
+1> c(mini_proc).
+{ok,mini_proc}
+9> P3 = spawn(mini_proc, wait, []).
+<0.101.0>
 ----
 
-Now armed with these inspection tools we are ready to look
-at what these fields in the PCB mean.
+By pressing `Ctrl+c` we get back to the debugger:
+
+----
+    Thread 1 "beam.debug.smp" received signal SIGINT, Interrupt.
+                                                                [Switching to Thread 0x7ffff79b3c40 (LWP 2170)]
+(gdb)
+----
+
+I had some problem with the ETP commands unless I was in a scheduler thread, so let's switch to one
+and list the processes:
+
+----
+(gdb) thread 7
+[Switching to thread 7 (Thread 0x7fffb40b96c0 (LWP 2191))]
+(gdb) etp-processes
+---
+  Pix: 0
+  Pid: <0.0.0>
+  State: prq-prio-normal | usr-prio-normal | act-prio-normal
+
+  Flags: trap-exit
+  Registered name: init
+  Current function: unknown
+  I: #Cp<init:loop/1+0x64>
+  Heap size: 987
+  Old-heap size: 987
+  Mbuf size: 38
+  Msgq len: 0 (inner=0, outer=0)
+  Msgq Flags: on-heap
+  Parent: []
+  Pointer: (Process*)0x5555561301c8
+
+...
+
+---
+  Pix: 808
+  Pid: <0.101.0>
+  State: prq-prio-normal | usr-prio-normal | act-prio-normal
+
+  Flags:
+  Current function: unknown
+  I: #Cp<0x7fffb53711dc>
+  Heap size: 233
+  Old-heap size: 0
+  Mbuf size: 0
+  Msgq len: 0 (inner=0, outer=0)
+  Msgq Flags: on-heap
+  Parent: <0.93.0>
+  Pointer: (Process*)0x7fff9ed6e030
+---
+  Pix: 816
+  Pid: <0.102.0>
+  State: prq-prio-normal | usr-prio-normal | act-prio-normal
+
+  Flags:
+  Current function: unknown
+  I: #Cp<io:execute_request/3+0x1a4>
+  Heap size: 233
+  Old-heap size: 0
+  Mbuf size: 0
+  Msgq len: 0 (inner=0, outer=0)
+  Msgq Flags: on-heap
+  Parent: <0.79.0>
+  Pointer: (Process*)0x7fff9ed6dce8
+---
+(gdb) 
+----
+
+We see the address of the '<0.101.0>' process in the `Pointer` field.
+We can use the `etp-stackdump` and `etp-heapdump` commands to
+inspect the stack and heap of the process. The `etp-stackdump`
+command takes a process pointer as an argument. 
+
+----
+(gdb) set $p = ((Process *) 0x7fff9ed6e030)
+(gdb) etp-stackdump $p
+% Stacktrace (3)
+I: #Cp<0x7fffb53711dc>.
+0: {timestamp,{1747,147859,212377}}.
+1: #Cp<0x7fffb4c14a78>.
+2: #Cp<0x7fffb4c14a78>.
+(gdb) etp-heapdump $p
+% heapdump (7):
+ 0x7fff9eaf8278: | H:   3-tuple | I:      1747 | I:    147859 | I:    212377 | H:   2-tuple |    timestamp | B:0x9eaf827a
+(gdb)  
+----
+
+As expected the stack and the heap contains a 2-tuple with the 3-tuple timestamp: `{timestamp, {1747,147859,212377}}`.
+
+
 
 === The PCB
 
@@ -679,27 +709,91 @@ of the chapter we will go through the most important fields. We will
 leave out some fields that have to do with execution and tracing from
 this chapter, instead we will cover those in xref:CH-BEAM[].
 
+We can see most of the fields in the PCB by just printing the value
+of what the process pointer points to:
+
+----
+print *((Process *) 0x7fff9ed6e030)
+$2 = {common =
+      {id = 3470333576787,
+       refc = {atmc = {counter = 1}, sint = 1},
+       tracer = 59, trace_flags = 167772160,
+       timer = {counter = 0},
+       u = {alive = {started_interval = 263, reg = 0x0, links = 0x0,
+                    lt_monitors = 0x0, monitors = 0x0}, 
+                   release = {later = 263, func = 0x0, data = 0x0, next = 0x0}}},
+      htop = 0x7fff9eaf82b0,
+      stop = 0x7fff9eaf89a8,
+      fcalls = 3998,
+      freason = 0,
+      fvalue = 59,
+      heap = 0x7fff9eaf8278,
+      hend = 0x7fff9eaf89c0,
+      abandoned_heap = 0x0,
+      heap_sz = 233,
+      min_heap_size = 233,
+      min_vheap_size = 46422,
+      max_heap_size = 3,
+      arity = 0,
+      arg_reg = 0x7fff9ed6e0f8,
+      max_arg_reg = 6,
+      def_arg_reg = {588235, 322955, 59, 14178673876263027908, 14178673876263027908, 4000},
+      i = 0x7fffb53711dc <mini_proc:wait/0+140>,
+      catches = 0, rcount = 0, schedule_count = 0,
+      reds = 6, flags = 0, group_leader = 2267742733347, ftrace = 59, next = 0x555556142888,
+      uniq = 0,
+      sig_qs = {first = 0x0, last = 0x7fff9ed6e170, save = 0x7fff9ed6e170, cont = 0x0,
+                cont_last = 0x7fff9ed6e188,
+                nmsigs = {next = 0x0, last = 0x0},
+                recv_mrk_blk = 0x0, len = 0, flags = 2},
+      bif_timers = 0x0, dictionary = 0x0,
+      seq_trace_clock = 0, seq_trace_lastcnt = 0, seq_trace_token = 59,
+      u = {real_proc = 0x8f9cb, terminate = 0x8f9cb,
+           initial = {module = 588235, function = 322955, arity = 0}},
+      current = 0x0, parent = 3195455669715, static_flags = 0,
+      high_water = 0x7fff9eaf8278,
+      old_hend = 0x0,
+      old_htop = 0x0,
+      old_heap = 0x0,
+      gen_gcs = 0,
+      max_gen_gcs = 65535,
+      off_heap = {first = 0x0, overhead = 0},
+      mbuf = 0x0, live_hf_end = 0xfffffffffffffff8, msg_frag = 0x0, mbuf_sz = 0,
+      psd = {counter = 0},
+      bin_vheap_sz = 46422, bin_old_vheap_sz = 46422, bin_old_vheap = 0,
+      sys_task_qs = 0x0, dirty_sys_tasks = 0x0,
+      state = {counter = 42}, dirty_state = {counter = 0},
+      sig_inq = {first = 0x0, last = 0x7fff9ed6e2a8, len = 0,        
+                 nmsigs = {next = 0x0, last = 0x0}},
+      trace_msg_q = 0x0,lock = {flags = {counter = 0},
+                                queue = {0x0, 0x0, 0x0, 0x0, 0x0},
+                                locked = {{counter = 0}, {counter = 0}, {counter = 0},
+                                          {counter = 0}, {counter = 0}}},
+      scheduler_data = 0x0, run_queue = {counter = 140736249294720},
+      last_htop = 0x7fff9eaf8298, last_mbuf = 0x0, heap_hfrag = 0x0, last_old_htop = 0x0,
+      debug_reds_in = 4000
+     }
+----
+
 If you want to dig even deeper than we will go in this chapter you can
 look at the C source code. The ((PCB)) is implemented as a C struct called `process` in the file
-https://github.com/erlang/otp/blob/OTP-19.3/erts/emulator/beam/erl_process.h[`erl_process.h`].
-
+https://github.com/erlang/otp/blob/OTP-19.3/erts/emulator/beam/erl_process.h[`erl_process.h`] for OTP19
+or https://github.com/erlang/otp/blob/master/erts/emulator/beam/erl_process.h[`erl_process.h`]
+for the latest version.
 
 The field `id` contains the process ID (or PID).
-
-----
-    0 | id          | 0x000001d0000003a3 |                    |
-----
-
+'id = 3470333576787' which is '0b110010100000000000000000000000011001010011' in binary.
 The process ID is an Erlang term and hence tagged (See xref:CH-TypeSystem[]). This means
 that the 4 least significant bits are a tag (0011). In the
 code section there is a module for inspecting Erlang terms
-(see xref:listing-show[show.erl]) which we will cover in
-the chapter on types. We can use it now to to examine the
+(see show.erl in the online appendix)
+which we will cover in
+the chapter on types. We can use it now to examine the
 type of a tagged word though.
 
 [source,erlang]
 ----
-4> show:tag_to_type(16#0000001d0000003a3).
+4> show:tag_to_type(3470333576787).
 pid
 5>
 ----
@@ -878,7 +972,7 @@ safely write data. If a sending process can not get the lock, it would
 write to the `m-buf` instead. When all data of a message has been
 copied to the `m-buf`, the message is linked to the process through the
 mailbox. The linking (`LINK_MESSAGE` in
-link:https://github.com/erlang/otp/blob/OTP-19.3/erts/emulator/beam/erl_message.h[erl_message.h])
+link:https://github.com/erlang/otp/blob/master/erts/emulator/beam/erl_message.h[erl_message.h])
 appends the message to the receiver's
 message queue.
 
@@ -953,93 +1047,6 @@ Each mailbox consists of a length and two pointers, stored in the fields
 `msg_inq.first`, and `msg_inq.last` for the external in queue. There is
 also a pointer to the next message to look at (`msg.save`) to implement
 selective receive.
-
-==== Inspecting Message Handling
-
-Let us use our introspection tools to see how this works in more
-detail. We start by setting up a process with a message in the mailbox
-and then take a look at the PCB.
-
-[source,erlang]
-----
-4> P = spawn(fun() -> receive stop -> ok end end).
-<0.63.0>
-5> P ! start.
-start
-6> hipe_bifs:show_pcb(P).
-
-...
-  408 | msg.first     | 0x00007fd40962d880 |                    |
-  416 | msg.last      | 0x00007fd40962d880 |                    |
-  424 | msg.save      | 0x00007fd40962d880 |                    |
-  432 | msg.len       | 0x0000000000000001 |                    |
-  696 | msg_inq.first | 0x0000000000000000 |                    |
-  704 | msg_inq.last  | 0x00007fd40a306238 |                    |
-  712 | msg_inq.len   | 0x0000000000000000 |                    |
-  616 | mbuf          | 0x0000000000000000 |                    |
-  640 | mbuf_sz       | 0x0000000000000000 |                    |
-...
-
-----
-
-From this we can see that there is one message in the message queue and
-the `first`, `last` and `save` pointers all point to this message.
-
-As mentioned we can force the message to end up in the in queue by
-setting the flag `message_queue_data`. We can try this with the following
-program:
-
-[source,erlang]
-----
-include::../code/processes_chapter/src/msg.erl[]
-----
-
-With this program we can try sending a message on heap and off heap and
-look at the PCB after each send. With on heap we get the same result
-as when just sending a message before:
-
-[source,erlang]
-----
-5> msg:send_on_heap().
-
-...
-
-  408 | msg.first     | 0x00007fd4096283c0 |                    |
-  416 | msg.last      | 0x00007fd4096283c0 |                    |
-  424 | msg.save      | 0x00007fd40a3c1048 |                    |
-  432 | msg.len       | 0x0000000000000001 |                    |
-  696 | msg_inq.first | 0x0000000000000000 |                    |
-  704 | msg_inq.last  | 0x00007fd40a3c1168 |                    |
-  712 | msg_inq.len   | 0x0000000000000000 |                    |
-  616 | mbuf          | 0x0000000000000000 |                    |
-  640 | mbuf_sz       | 0x0000000000000000 |                    |
-
-...
-
-----
-
-If we try sending to a process with the flag set to `off_heap`
-the message ends up in the in queue instead:
-
-[source,erlang]
-----
-6> msg:send_off_heap().
-
-...
-
-  408 | msg.first     | 0x0000000000000000 |                    |
-  416 | msg.last      | 0x00007fd40a3c0618 |                    |
-  424 | msg.save      | 0x00007fd40a3c0618 |                    |
-  432 | msg.len       | 0x0000000000000000 |                    |
-  696 | msg_inq.first | 0x00007fd3b19f1830 |                    |
-  704 | msg_inq.last  | 0x00007fd3b19f1830 |                    |
-  712 | msg_inq.len   | 0x0000000000000001 |                    |
-  616 | mbuf          | 0x0000000000000000 |                    |
-  640 | mbuf_sz       | 0x0000000000000000 |                    |
-
-...
-
-----
 
 ==== The Process of Sending a Message to a Process
 
@@ -1328,7 +1335,7 @@ xref:erlang_process_memory_5[]:
 The process dictionary is a very straighforward ((hash table))
 implementation. In fact the PD memory area is just the plain bucket array,
 and each slot is either ((`NIL`)) (the empty list) if the bucket is empty,
-or otherwise it's a tagged pointer to to data on the heap -- a simple tuple
+or otherwise it's a tagged pointer to data on the heap -- a simple tuple
 `{Key, Value}` if there is only one entry in the bucket, or a
 `NIL`-terminated list `[{Key1, Value1}, ..., {KeyN, ValueN}]` if the bucket
 has N entries. You can find the implementation in the file
@@ -1367,7 +1374,7 @@ In this chapter we have looked at how a process is implemented. In
 particular we looked at how the memory of a process is organized, how
 message passing works and the information in the PCB. We also looked
 at a number of tools for inspecting processes introspection, such as
-`erlang:process_info/2`, and the `hipe:show_*_` BIFs.
+`erlang:process_info/2`, and the ETP debug macros.
 
 Use the functions `erlang:processes/0` and `erlang:process_info/1,2`
 to inspect the processes in the system. Here are

@@ -142,7 +142,7 @@ registers must to be saved on the stack in Y registers across a function
 call, using a "`caller saves`" convention.)
 
 The X registers are stored in a C array in the BEAM emulator (separate for
-each scheduler) and they are globally accessible from all functions The X0
+each scheduler) and they are globally accessible from all functions. The X0
 register is cached in a local variable, which gets kept in a physical
 machine register on most architectures. Since X0 is heavily used, this is
 an important optimization.
@@ -178,7 +178,7 @@ needs saving will be in Y registers at that time.
 The ((Frame Pointer)) (FP) is not necessarily a "`real`" BEAM register --
 it can be calculated from the stack top given that we know the current size
 of the stack frame. Tracking it separately might however make other things
-easier in the implementation, and We will treat it here as if it exists,
+easier in the implementation, and we will treat it here as if it exists,
 since it simplifies the presentation.
 
 The ((Continuation Pointer)) (CP) gets set to the return address when the
@@ -284,7 +284,7 @@ Y0, and then X1 to X0.
 Now we have the second argument `B` in X0, and we can call the `id/1`
 function again by `{call,1,{f,4}}`. After this, X0 contains `id(B)` and Y0
 contains `id(A)`. We can perform the addition by calling the built-in
-function `\+/2`: `{gc_bif,'`+',{f,0},1,[{y,0},{x,0}],{x,0}}`. (We will go
+function `\+/2`: `{gc_bif,'+',{f,0},1,[{y,0},{x,0}],{x,0}}`. (We will go
 into the details of BIF calls and GC later.) The result is again in X0,
 which is where it needs to be for returning from `add/2`. All that is
 needed before the return is to move the stack pointer back again with
@@ -349,7 +349,7 @@ integer(I) ->
 -------------------------------------------
 
 Now lets write a simple ((virtual machine)) and ((bytecode interpreter))
-in C. (The full code can be found in xref:AP-listings[].)
+in C. (The full code can be found in the online appendix.)
 
 [[bytecode_interpreter_example]]
 [source, C]
@@ -561,7 +561,6 @@ add(A,B) -> id(A) + id(B).
 
 Compiled to BEAM code this will look as follows (or would, before the
 `swap` instruction was added -- see xref:SEC-stack_example[]):
-// TODO: modernize this with a less obsolete example
 
 [source, Erlang]
 -------------------------------------------
@@ -581,7 +580,7 @@ Compiled to BEAM code this will look as follows (or would, before the
     return.
 -------------------------------------------
 
-(See add.erl and add.S in xref:AP-listings[] for the full code.)
+(See add.erl and add.S in the online appendix for the full code.)
 
 Now if we zoom in on the three instructions between the function calls
 in this code:
@@ -715,17 +714,9 @@ amount of work without using up its reductions.
 
 [WARNING]
 ====
-// TODO: check term_to_binary and friends to see is this still is true
-There are some BIFs that can run for a long time only using 1
-reduction, like `term_to_binary` and `binary_to_term`. Try to make
-sure that you only call these BIFs with small terms or binaries, or
-you might lock up the scheduler for a very long time.
-
-Also, if you write your own NIFs, make sure they can yield and that
+If you write your own NIFs, make sure they can yield and that
 they bump the reduction counter by an amount proportional to their
 run time.
-// TODO: briefly mention dirty schedulers here
-
 ====
 
 We will go through the details of how the scheduler works in

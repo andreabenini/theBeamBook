@@ -17,6 +17,17 @@ font:
       bold: GEM_FONTS_DIR/mplus1mn-bold-subset.ttf
       italic: GEM_FONTS_DIR/mplus1mn-italic-subset.ttf
       bold_italic: GEM_FONTS_DIR/mplus1mn-bold_italic-subset.ttf
+    Hack:
+      normal:      hack/Hack-Regular.ttf
+      italic:      hack/Hack-Italic.ttf
+      bold:        hack/Hack-Bold.ttf
+      bold_italic: hack/Hack-BoldItalic.ttf
+    Courier:
+      normal: hack/Hack-Regular.ttf
+      italic: hack/Hack-Italic.ttf
+      bold: hack/Hack-Bold.ttf
+      bold_italic: hack/Hack-BoldItalic.ttf
+      
 page:
   background_color: FFFFFF
   layout: portrait
@@ -28,7 +39,7 @@ page:
   # margin_outer: 0.39in
   margin_inner: 0.75in
   margin_outer: 0.59in
-  size: A4
+  
 base:
   align: justify
   # color as hex string (leading # is optional)
@@ -89,7 +100,7 @@ link:
   font_color: 428BCA
 codespan:
   font_color: B12146
-  font_family: M+ 1mn
+  font_family: Hack
 button:
   content: "[\u2009%s\u2009]"
   font_style: bold
@@ -281,9 +292,12 @@ footer:
   line_height: 1
   padding: [$base_line_height_length / 2, 1, 0, 1]
   vertical_align: top
-  recto:
+  running-content:
+    start-at: after-toc     # page numbering begins on first body page
+  recto:                    # right-hand (odd) pages
     right:
       content: '{page-number}'
-  verso:
+
+  verso:                    # left-hand (even) pages
     left:
-      content: $footer_recto_right_content
+      content: '{page-number}'

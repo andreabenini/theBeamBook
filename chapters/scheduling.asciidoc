@@ -101,7 +101,7 @@ By using the _Load Charts_ tab in the Observer we can see that all
 four schedulers are fully loaded while the busy processes execute.
 
 ----
-observer:start().
+2> observer:start().
 ok
 3> RunThem(8).
 ----
@@ -200,25 +200,6 @@ While a process is running the emulator keeps the number of reductions
 left to execute in the (register mapped) variable `FCALLS` (see
 `beam_emu.c`).
 
-We can examine this value with `hipe_bifs:show_pcb/1`:
-
-----
-iex(13)> :hipe_bifs.show_pcb self
- P: 0x00007efd7c2c0400
- -----------------------------------------------------------------
- Offset| Name          |              Value |             *Value |
-     0 | id            | 0x00000270000004e3 |                    |
-
- ...
-
-   328 | rcount        | 0x0000000000000000 |                    |
-   336 | reds          | 0x000000000000a528 |                    |
-
- ...
-
-   320 | fcalls        | 0x00000000000004a3 |                    |
-----
-
 The field `reds` keep track of the total number of reductions a
 process has done up until it was last suspended. By monitoring this
 number you can see which processes do the most work.
@@ -246,68 +227,6 @@ it will instead go into the state _waiting_ (for a message).
 In the next section we will take a look at all the different
 states a process can be in.
 
-// I have compiled a table of variable names used for reduction counting
-// as a reference for you if you want to dive into the source code. In
-// xref:redvars[] you can see the variables used globally and in the PCB
-// and in the emulator and the scheduler.
-
-// [[redvars]]
-// [cols="1,2a"]
-// |====
-// | Global
-
-// |
-
-// [cols="1,3"]
-// !====
-// ! Variable ! Use
-
-// ! `function_calls` ! static (file global) variable in `erl_process.c`, number of function calls since last system-level activity
-
-// !====
-
-// | In PCB
-
-// |
-
-// [cols="1,3"]
-// !====
-// ! Variable                         ! Use
-// ! p->fcalls                        !
-// ! p->reds                          !
-// ! REDS_IN == (`+p->def_arg_reg[5]+`) ! reds while swapped out?
-
-// !====
-
-// | beam_emu.c
-
-// |
-
-// [cols="1,3"]
-// !====
-// ! Variable   ! Use
-// ! FCALLS     ! register mapped var for reductions
-// ! reds_used  ! used reductions during execution, calls in erl_process.c schedule
-// ! reds (c_p->fcalls) !
-// ! neg_o_reds ! ("negative old value of reds when call saving is active")
-// !====
-
-// | erl_process.c schedule/2
-
-// |
-
-// [cols="1,3"]
-// !====
-// ! Variable         ! Use
-// ! calls            ! argument to schedule
-// ! context_reds     !
-// ! fcalls           !
-// ! input_reductions !
-// ! actual_reds      !
-// ! reds             !
-// !====
-
-// |====
 
 === The Process State (or _status_)
 
@@ -487,7 +406,7 @@ waiting state.
 
 When a message is delivered to an inbox the sending process will check
 whether the receiver is _sleeping_ in the waiting state, and in that
-case it will _wake_ the process, change its state to runable, and put
+case it will _wake_ the process, change its state to runnable, and put
 it at the end of the appropriate ready queue.
 
 If the receive statement has a `timeout` clause a timer will be
@@ -524,8 +443,8 @@ T the timer is inserted into the slot at `+(tiw_pos+T)%TIW_SIZE+`.
 The timer stored in the timing wheel is a pointer to an `ErlTimer`
 struct. See link:https://github.com/erlang/otp/blob/OTP-19.1/erts/emulator/beam/erl_time.h[erl_time.h]. If several timers are
 inserted into the same slot they are linked together in a linked list
-by the `prev` and `next` fields. The `count` field is set to 
-`T/TIW_SIZE` 
+by the `prev` and `next` fields. The `count` field is set to
+`T/TIW_SIZE`
 
 
 [[ErlTimer]]
@@ -591,15 +510,40 @@ the execution to the emulator.
 Looking at it that way, the scheduler loop looks like this:
 
 . Update reduction counters.
-. Check timers
-. If needed check balance
-. If needed migrate processes and ports
-. Do auxiliary scheduler work
-. If needed check IO and update time
-. While needed pick a port task to execute
-. Pick a process to execute
++
+Each process is allotted a number of reductions (small units of execution).
+When the reduction count is exceeded, the process is preempted and another is scheduled.
 
-// TODO: Expand on these bullets
+. Check timers
++
+Timers (e.g., `receive ... after`) are checked via a timing wheel.
+If a timeout has expired, the associated process is moved to the ready queue.
+
+. If needed check balance
++
+The system occasionally checks if some scheduler threads are overloaded.
+If so, load balancing decisions are made.
+
+. If needed migrate processes and ports
++
+Processes and ports may be moved between scheduler threads to rebalance CPU load in multicore environments.
+
+. Do auxiliary scheduler work
++
+This includes handling dirty NIFs, process exits, tracing hooks, and other deferred runtime maintenance tasks.
+
+. If needed check IO and update time
++
+Polls file descriptors or ports for I/O readiness and may update system time or wall clocks.
+
+. While needed pick a port task to execute
++
+Tasks such as TCP reads or writes, or invoking driver callbacks, are performed here before scheduling a process.
+
+. Pick a process to execute
++
+A runnable process is selected from the run queue, considering priority and fairness, and handed to the emulator for execution.
+
 
 === Load Balancing
 
@@ -669,8 +613,8 @@ letting schedulers execute on that plan until a new plan is set up.
 Every 2000*CONTEXT_REDS reductions a scheduler calculates
 a migration path per priority per scheduler by looking at the workload
 of all schedulers. The migration path can have three different types of
-values: 1) cleared 2) migrate to scheduler # 3) immigrate from
-scheduler #
+values: 1) cleared 2) migrate to scheduler 3) #immigrate from
+scheduler#.
 
 When a process becomes ready (for example by receiving a message or
 triggering a timeout) it will normally be scheduled on the last
@@ -736,6 +680,7 @@ and fix decreased till they both pass the balance point. If one index
 reaches the balance point first it wraps.
 
 In the example:
+
  * Iteration 1: S2.emigrate_to = S3 and S3.immigrate_from = S2
  * Iteration 2: S1.emigrate_to = S4 and S4.immigrate_from = S1
 
