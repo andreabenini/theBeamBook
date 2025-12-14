@@ -191,7 +191,7 @@ The examples below assume that there is a specific instructions looking like thi
 move_call x f
 ....
 
-without any flags to the `%macro` we the following code will be generated:
+without any flags to the `%macro` the following code will be generated:
 
 [source, C]
 BeamInstr* next;
@@ -333,7 +333,7 @@ or atoms. If the value is of any other type the compiler will not emit a
 `select_val` instruction. The loader uses a couple of heuristics to figure
 out what type algorithm to use when doing the `select_val`.
 
-jump_on_val:: Create a jump table and use the value as the index. This if very
+jump_on_val:: Create a jump table and use the value as the index. This is very
 efficient and happens when a group of close together integers are used as the
 value to select on. If not all values are present, the jump table is padded with
 extra fail label slots.
